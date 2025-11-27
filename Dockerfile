@@ -8,7 +8,7 @@ FROM docker.m.daocloud.io/library/node:20.18 AS builder
 
 WORKDIR /app
 
-# Konversi ARG menjadi ENV agar variabel dapat diakses selama RUN pnpm build
+# Konversi ARG menjadi ENV
 ENV THIRD_API_URL=$THIRD_API_URL
 ENV THIRD_API_KEY=$THIRD_API_KEY
 ENV APP_BASE_URL=$APP_BASE_URL
@@ -19,7 +19,7 @@ ENV SERVER_ADDRESS=$SERVER_ADDRESS
 COPY apps/we-dev-next/package.json ./
 COPY apps/we-dev-next/pnpm-lock.yaml ./
 
-# Install dependencies
+# Install dependencies (Node_modules terbuat di sini)
 RUN npm config set registry https://registry.npmmirror.com/ && \
     npm install -g pnpm && \
     pnpm config set registry https://registry.npmmirror.com && \
@@ -42,8 +42,10 @@ WORKDIR /app
 
 # Copy output build dari Stage 1
 COPY --from=builder /app/.next ./.next
+# Folder public dihilangkan, sesuai permintaan sebelumnya
 
-# HILANG: Baris COPY /app/public sudah dihapus di sini
+# FIX: Menyalin folder node_modules dari builder (tempat next dan depedensi lain berada)
+COPY --from=builder /app/node_modules ./node_modules 
 
 # Setup pnpm untuk Runner Stage
 COPY apps/we-dev-next/package.json ./
