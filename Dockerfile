@@ -26,7 +26,7 @@ RUN npm config set registry https://registry.npmmirror.com/ && \
     pnpm config set strict-ssl false && \
     pnpm install
 
-# Copy source code aplikasi (termasuk folder src dan public)
+# Copy source code aplikasi
 COPY apps/we-dev-next/ ./
 
 # Run Build
@@ -42,7 +42,8 @@ WORKDIR /app
 
 # Copy output build dari Stage 1
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
+
+# HILANG: Baris COPY /app/public sudah dihapus di sini
 
 # Setup pnpm untuk Runner Stage
 COPY apps/we-dev-next/package.json ./
