@@ -8,7 +8,7 @@ FROM docker.m.daocloud.io/library/node:20.18 AS builder
 
 WORKDIR /app
 
-# Konversi ARG menjadi ENV
+# FIX 1: Konversi ARG menjadi ENV untuk pnpm build
 ENV THIRD_API_URL=$THIRD_API_URL
 ENV THIRD_API_KEY=$THIRD_API_KEY
 ENV APP_BASE_URL=$APP_BASE_URL
@@ -19,7 +19,7 @@ ENV SERVER_ADDRESS=$SERVER_ADDRESS
 COPY apps/we-dev-next/package.json ./
 COPY apps/we-dev-next/pnpm-lock.yaml ./
 
-# Install dependencies (Node_modules terbuat di sini)
+# Install dependencies
 RUN npm config set registry https://registry.npmmirror.com/ && \
     npm install -g pnpm && \
     pnpm config set registry https://registry.npmmirror.com && \
@@ -34,24 +34,24 @@ RUN pnpm build
 
 FROM docker.m.daocloud.io/library/node:20.18-slim AS runner
 
-# Environment Variables untuk Runtime
+# FIX 2: Atur ke Port 80 sesuai log runtime Next.js
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=80
 
 WORKDIR /app
 
 # Copy output build dari Stage 1
 COPY --from=builder /app/.next ./.next
-# Folder public dihilangkan, sesuai permintaan sebelumnya
 
-# FIX: Menyalin folder node_modules dari builder (tempat next dan depedensi lain berada)
+# FIX 3: Menyalin node_modules agar perintah 'next' ditemukan
 COPY --from=builder /app/node_modules ./node_modules 
 
 # Setup pnpm untuk Runner Stage
 COPY apps/we-dev-next/package.json ./
 RUN npm install -g pnpm
 
-EXPOSE 3000
+# FIX 4: Expose Port 80
+EXPOSE 80
 
 # Start Command
 CMD ["pnpm", "start"]
